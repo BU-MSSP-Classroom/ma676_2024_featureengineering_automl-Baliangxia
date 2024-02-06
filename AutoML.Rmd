@@ -328,8 +328,7 @@ You will use the framework of tidymodel workflow, which will run these transform
 
 Since you've worked on it in MA679 please copy and paste your best model here.  
 ```{r,echo=TRUE}
-##
-##
+model<-lm(log(SalePrice)~`Gr Liv Area`+`Overall Qual`+`Year Built`,ames_raw_2008)
 ```
 
 Your answer:
@@ -343,8 +342,26 @@ Please write your answer in full sentences.
 Please perform feature engineering on the Ames housing data that you think will help with the prediction.
 
 ```{r,echo=TRUE}
-##
-##
+library(dplyr)
+library(tidyr)
+
+ames_raw_2008 <- ames_raw_2008 %>%
+  mutate(
+    GrLivArea_squared = `Gr Liv Area`^2,
+    OverallQual_squared = `Overall Qual`^2,
+    GrLivArea_OverallQual_interaction = `Gr Liv Area` * `Overall Qual`,
+    YearBuilt_OverallQual_interaction = `Year Built` * `Overall Qual`
+  )
+ames_raw_2008_scaled <- ames_raw_2008 %>%
+  mutate(
+    `Gr Liv Area` = scale(`Gr Liv Area`),
+    `Year Built` = scale(`Year Built`)
+  )
+model_new <- lm(log(SalePrice) ~ `Gr Liv Area` + `Overall Qual` + `Year Built` +
+              GrLivArea_squared + OverallQual_squared +
+              GrLivArea_OverallQual_interaction + YearBuilt_OverallQual_interaction,
+            data = ames_raw_2008_scaled)
+
 ```
 
 Your answer:
@@ -358,16 +375,31 @@ Please write your answer in full sentences.
 Compare the result before and after the feature engineering step.
 
 ```{r,echo=TRUE}
-##
-##
+predictions_before <- predict(model, ames_raw_2008)
+mse_before <- mean((log(ames_raw_2008$SalePrice) - predictions_before)^2)
+rmse_before <- sqrt(mse_before)
+rsq_before <- summary(model)$r.squared
+cat("Before feature engineering:\n")
+cat("Mean Squared Error (MSE): ", mse_before, "\n")
+cat("Root Mean Squared Error (RMSE): ", rmse_before, "\n")
+cat("R-squared (R^2): ", rsq_before, "\n")
+
+predictions_after <- predict(model_new, ames_raw_2008_scaled)
+mse_after <- mean((log(ames_raw_2008$SalePrice) - predictions_after)^2)
+rmse_after <- sqrt(mse_after)
+rsq_after <- summary(model_new)$r.squared
+cat("\nAfter feature engineering:\n")
+cat("Mean Squared Error (MSE): ", mse_after, "\n")
+cat("Root Mean Squared Error (RMSE): ", rmse_after, "\n")
+cat("R-squared (R^2): ", rsq_after, "\n")
 ```
 
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
 
+The model's performance significantly improved after feature engineering. Before, it showed a moderate error, with predictions deviating by approximately 0.1747 units from actual sale prices. The model explained about 81.05% of the variance in sale prices. However, after implementing feature engineering techniques like polynomial features and interaction terms, the model's accuracy notably increased. The prediction error decreased, and the model explained a higher percentage of the variance in sale prices, resulting in a more robust and accurate model overall. This highlights the effectiveness of feature engineering in enhancing predictive power for the Ames housing dataset.
 
 ~~~
 
